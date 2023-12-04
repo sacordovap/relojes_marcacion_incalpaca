@@ -125,6 +125,8 @@
         {{-- <p>Dispositivo: {{ $deviceInfo['Product'] }}</p>
         <p>Modelo: {{ $deviceInfo['Model'] }}</p>
         <p>Conectado a: {{ $zkConfig['ip'] }}:{{ $zkConfig['port'] }}</p> --}}
+
+        <a href="{{ route('login') }}" class="btn btn-primary">Regresar al Login</a>
     </div>
 
     <style>
