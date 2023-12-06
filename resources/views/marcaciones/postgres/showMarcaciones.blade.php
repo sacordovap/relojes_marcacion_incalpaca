@@ -11,7 +11,7 @@
                 <th>fecha_marcacion</th>
                 <th>hora_marcacion </th>
                 <th>Reloj</th>
-                
+
                 <!-- Agrega más columnas según tu estructura de la tabla -->
             </tr>
         </thead>

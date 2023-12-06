@@ -2,46 +2,43 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid vh-100  align-items-center justify-content-center">
-        <div class="row">
-            <div class="col-md-4 mx-auto">
-                <div class="card login-container">
-                    <div class="card-body text-center">
-                        <img src="https://via.placeholder.com/150" alt="Logo" class="mb-3">
-                        <form method="GET" action="{{ route('dashboard') }}" class="text-left"
-                            onsubmit="return validateForm()">
-                            @csrf
+    <div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white shadow-lg">
+                <div class="card-body text-center">
+                    <img src="{{ asset('images/incalpaca.png') }}" alt="Logo" class="mb-3">
 
-                            <div class="form-group">
-                                <label for="username">{{ __('Username') }}</label>
-                                <input id="username" type="text"
-                                    class="form-control @error('username') is-invalid @enderror" name="username"
-                                    value="{{ old('username') }}" required autofocus>
-                                @error('username')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
+                    <form method="GET" action="{{ route('dashboard') }}" class="text-left" onsubmit="return validateForm()">
+                        @csrf
 
-                            <div class="form-group">
-                                <label for="password">{{ __('Password') }}</label>
-                                <input id="password" type="password"
-                                    class="form-control @error('password') is-invalid @enderror" name="password" required>
-                                @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
+                        <div class="form-group">
+                            <label for="username">{{ __('Username') }}</label>
+                            <input id="username" type="text" class="form-control @error('username') is-invalid @enderror"
+                                name="username" value="{{ old('username') }}" required autofocus>
+                            @error('username')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
 
-                            <div class="form-group mb-0">
-                                <button type="submit" class="btn btn-primary btn-block">
-                                    {{ __('Login') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <div class="form-group">
+                            <label for="password">{{ __('Password') }}</label>
+                            <input id="password" type="password"
+                                class="form-control @error('password') is-invalid @enderror" name="password" required>
+                            @error('password')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                {{ __('Login') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

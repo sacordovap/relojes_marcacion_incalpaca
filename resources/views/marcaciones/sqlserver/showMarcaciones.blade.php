@@ -1,8 +1,36 @@
 <!-- resources/views/sqlserver/index.blade.php -->
+@extends('layouts.app')
 
+@section('content')
 <h1>Top 10 Marcaciones SQL Server</h1>
 
-<table>
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th,
+    td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #9c9b53c7;
+    }
+
+    td {
+        white-space: nowrap;
+    }
+</style>
+<table >
     <thead>
         <tr>
             <th>Cod Trabajador</th>
@@ -14,7 +42,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($marcaciones as $marcacion)
+        @foreach ($marcaciones as $marcacion)
             <tr>
                 <td>{{ $marcacion->cod_trabajador }}</td>
                 <td>{{ $marcacion->fecha_marcacion }}</td>
@@ -26,3 +54,4 @@
         @endforeach
     </tbody>
 </table>
+

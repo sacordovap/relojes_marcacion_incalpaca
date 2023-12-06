@@ -1,201 +1,150 @@
 <!-- resources/views/dashboard.blade.php -->
 @extends('layouts.app')
-
 @php
     use Rats\Zkteco\Lib\ZKTeco;
 
-    // Configuración de conexión con el dispositivo ZKTeco
-    // $zkConfig = [
-    //     'ip' => '9.10.8.103',
-    //     'port' => 4370,
-    // ];
+    // Define las instancias de ZKTeco para cada dispositivo
 
-    // Crear una instancia de Rats\Zkteco\Zkteco
-    // $zk = new ZKTeco($zkConfig['ip'], $zkConfig['port']);
-    $zk1 = new ZKTeco('9.10.8.102', 4370);
-    $zk = new ZKTeco('9.10.8.103', 4370);
-    $zk2 = new ZKTeco('9.10.8.104', 4370);
-    $zk3 = new ZKTeco('9.10.8.105', 4370);
-    $zk4 = new ZKTeco('9.10.8.106', 4370);
-    $zk5 = new ZKTeco('9.10.8.101', 4370);
-    $zk6 = new ZKTeco('9.10.8.107', 4370);
-    $zk7 = new ZKTeco('9.10.8.108', 4370);
-    $zk8 = new ZKTeco('9.10.8.109', 4370);
-    $zk9 = new ZKTeco('9.10.8.110', 4370);
-    $zk10 = new ZKTeco('9.10.8.111', 4370);
+    $zkDevices = [
+        'zk' => ['device' => new ZKTeco('9.10.8.103', 4370), 'id' => 1],
+        'zk1' => ['device' => new ZKTeco('9.10.8.102', 4370), 'id' => 2],
+        'zk2' => ['device' => new ZKTeco('9.10.8.104', 4370), 'id' => 3],
+        'zk3' => ['device' => new ZKTeco('9.10.8.105', 4370), 'id' => 4],
+        'zk4' => ['device' => new ZKTeco('9.10.8.106', 4370), 'id' => 5],
+        'zk5' => ['device' => new ZKTeco('9.10.8.101', 4370), 'id' => 6], //administrativos
+        'zk6' => ['device' => new ZKTeco('9.10.8.107', 4370), 'id' => 7],
+        'zk7' => ['device' => new ZKTeco('9.10.8.108', 4370), 'id' => 8],
+        'zk8' => ['device' => new ZKTeco('9.10.8.109', 4370), 'id' => 9],
+        'zk9' => ['device' => new ZKTeco('9.10.8.110', 4370), 'id' => 10],
+        'zk10' => ['device' => new ZKTeco('9.10.8.111', 4370), 'id' => 11],
+        // Agrega instancias para otros dispositivos
+    ];
 
-    // Intentar conectar al dispositivo
-    if ($zk->connect()) {
-        // Obtener información del dispositivo
-        $serie = $zk->serialNumber();
-        $users = $zk->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk->disconnect();
+    // Otras configuraciones y conexiones
+    foreach ($zkDevices as $deviceInfo) {
+        $device = $deviceInfo['device'];
+        if ($device->connect()) {
+            $device->disconnect();
+        }
+    }
+
+    // Obtiene los datos del dispositivo seleccionado
+    $selectedDeviceKey = request()->input('selected_device', 'zk'); // Por defecto, selecciona 'zk'
+    $selectedDeviceInfo = $zkDevices[$selectedDeviceKey];
+    $selectedDevice = $selectedDeviceInfo['device'];
+
+    if ($selectedDevice->connect()) {
+        $serie = $selectedDevice->serialNumber();
+        $selectedUsers = $selectedDevice->getAttendance();
+        $selectedDevice->disconnect();
     } else {
-        // Mostrar mensaje de error si no se pudo conectar
-        $users = [];
-    }
-    if ($zk1->connect()) {
-        // Obtener información del dispositivo
-        $serie1 = $zk1->serialNumber();
-        $users1 = $zk1->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk1->disconnect();
-    }
-    if ($zk2->connect()) {
-        // Obtener información del dispositivo
-        $serie2 = $zk2->serialNumber();
-        $users2 = $zk2->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk2->disconnect();
-    }
-    if ($zk3->connect()) {
-        // Obtener información del dispositivo
-        $serie3 = $zk3->serialNumber();
-        $users3 = $zk3->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk3->disconnect();
-    }
-    if ($zk4->connect()) {
-        // Obtener información del dispositivo
-        $serie4 = $zk4->serialNumber();
-        $users4 = $zk4->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk4->disconnect();
-    }
-    if ($zk5->connect()) {
-        // Obtener información del dispositivo
-        $serie5 = $zk5->serialNumber();
-        $users5 = $zk5->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk5->disconnect();
-    }
-    if ($zk6->connect()) {
-        // Obtener información del dispositivo
-        $serie6 = $zk6->serialNumber();
-        $users6 = $zk6->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk6->disconnect();
-    }
-    if ($zk7->connect()) {
-        // Obtener información del dispositivo
-        $serie7 = $zk7->serialNumber();
-        $users7 = $zk7->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk7->disconnect();
-    }
-    if ($zk8->connect()) {
-        // Obtener información del dispositivo
-        $serie8 = $zk8->serialNumber();
-        $users8 = $zk8->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk8->disconnect();
-    }
-    if ($zk9->connect()) {
-        // Obtener información del dispositivo
-        $serie9 = $zk9->serialNumber();
-        $users9 = $zk9->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk9->disconnect();
-    }
-    if ($zk10->connect()) {
-        // Obtener información del dispositivo
-        $serie10 = $zk10->serialNumber();
-        $users10 = $zk10->getAttendance(); // Update this line
-        // Desconectar del dispositivo
-        $zk10->disconnect();
+        $selectedUsers = [];
     }
 @endphp
 
 @section('content')
-    <h1>Dashboard</h1>
-    <div>
-        <h2>Información del Dispositivo ZKTeco</h2>}
-        <p>Dispositivo: {{ $serie }}</p>
-        <p>Dispositivo: {{ $serie1 }}</p>
-        <p>Dispositivo: {{ $serie2 }}</p>
-        <p>Dispositivo: {{ $serie3 }}</p>
-        <p>Dispositivo: {{ $serie4 }}</p>
-        <p>Dispositivo ADMINISTRATIVOS: {{ $serie5 }}</p>
-        <p>Dispositivo: {{ $serie6 }}</p>
-        <p>Dispositivo: {{ $serie7 }}</p>
-        <p>Dispositivo: {{ $serie8 }}</p>
-        <p>Dispositivo: {{ $serie9 }}</p>
-        <p>Dispositivo: {{ $serie10 }}</p>
-        {{-- <p>Dispositivo: {{ $deviceInfo['Product'] }}</p>
-        <p>Modelo: {{ $deviceInfo['Model'] }}</p>
-        <p>Conectado a: {{ $zkConfig['ip'] }}:{{ $zkConfig['port'] }}</p> --}}
+    <div class="container mt-3 bg-light p-4 rounded shadow">
+        <div class="header d-flex justify-content-between align-items-center bg-primary text-white p-3 rounded">
+            <h1>Panel de control</h1>
+            <a href="{{ route('login') }}" class="btn btn-light btn-logout">Cerrar sesión</a>
+        </div>
 
-        <a href="{{ route('login') }}" class="btn btn-primary">Regresar al Login</a>
+        <div class="header d-flex justify-content-between align-items-center bg-primary text-white p-3 rounded mt-3">
+            <a href="{{ route('indexUpMark') }}" class="btn btn-light">Actualizar registros</a>
+        </div>
+
+        <!-- Combo box para seleccionar dispositivo -->
+        <div class="mt-3">
+            <h2>Seleccionar Dispositivo:</h2>
+            <form method="post" action="{{ route('seleccionar_dispositivo') }}" class="form-inline">
+                @csrf
+                <div class="form-group mr-2">
+                    <select name="selected_device" class="form-control">
+                        @foreach ($zkDevices as $key => $device)
+                            <option value="{{ $key }}" @if ($selectedDeviceKey === $key) selected @endif>
+                                {{ $key }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Seleccionar</button>
+            </form>
+        </div>
+
+        <!-- Mostrar información del dispositivo seleccionado -->
+        <div class="mt-4">
+            <h5>Información del Marcador</h5>
+            <p>Dispositivo: {{ $serie }}</p>
+            <!-- ... Otros detalles del dispositivo ... -->
+        </div>
+
+        <!-- Tabla de Asistencia del dispositivo seleccionado -->
+        <div class="mt-4">
+            <h4>Registros actuales en el reloj</h4>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            {{-- <th>No.</th>
+                            <th>Key</th>
+                            <th>Uid</th> --}}
+                            <th>User</th>
+                            <th>Date</th>
+                            <th>hoursToMinutes</th>
+                            <th>DateNumber</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php $no = 0; @endphp
+                        @foreach ($selectedUsers as $key => $user)
+                            @php $no++; @endphp
+                            <tr>
+                                {{-- <td align="right">{{ $no }}</td>
+                                <td>{{ $key }}</td>
+                                <td>{{ $user['uid'] }}</td> --}}
+                                <td>{{ $user['id'] }}</td>
+                                <td>{{ $user['timestamp'] }}</td>
+                                <td>{{ hoursToMinutes($user['timestamp']) }}</td>
+                                <td>{{ dateToNumber($user['timestamp']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+@endsection
 
+@section('styles')
     <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        body {
+            background-color: #ecf0f1; /* Color de fondo general */
         }
 
-        th,
-        td {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
+        .header {
+            background-color: #3498db; /* Color de fondo de las secciones de encabezado */
+            color: #ffffff;
         }
 
-        th {
-            background-color: #f2f2f2;
+        .btn-logout {
+            margin-right: 10px;
         }
 
         tr:hover {
-            background-color: #9c9b53c7;
-        }
-
-        td {
-            white-space: nowrap;
+            background-color: #e0e0e0; /* Color de fondo al pasar el ratón sobre las filas de la tabla */
         }
     </style>
-
-    <table>
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Key</th>
-                <th>Uid</th>
-                <th>User</th>
-                <th>Date</th>
-                <th>hoursToMinutes</th>
-                <th>DateNumber</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $no = 0; @endphp
-            @foreach ($users5 as $key => $user)
-                @php $no++; @endphp
-                <tr>
-                    <td align="right">{{ $no }}</td>
-                    <td>{{ $key }}</td>
-                    <td>{{ $user['uid'] }}</td>
-                    <td>{{ $user['id'] }}</td>
-                    <td>{{ $user['timestamp'] }}</td>
-                    <td>{{ hoursToMinutes($user['timestamp']) }}</td>
-                    <td>{{ dateToNumber($user['timestamp']) }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-
-    <form>
-        <!-- Resto del formulario -->
-        <button type="submit">Enviar</button>
-    </form>
 @endsection
+
+
+
+
 @php
+
     function hoursToMinutes($hours)
     {
         $separatedDateTime = explode(' ', $hours);
-      
+
         $separatedData = explode(':', $separatedDateTime[1]);
         $minutesInHours = $separatedData[0] * 60;
         $minutesInDecimals = $separatedData[1];
@@ -213,4 +162,5 @@
         $separatedNumber = explode(' ', $number);
         return $separatedNumber[0];
     }
+
 @endphp
