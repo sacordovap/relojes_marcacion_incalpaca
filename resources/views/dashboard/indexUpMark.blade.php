@@ -4,6 +4,7 @@
 @php
     use Rats\Zkteco\Lib\ZKTeco;
 
+   
     $resultados = [];
 
     $serverName = 'TPXSVBD02\CONTSQLDB,61865';
@@ -34,20 +35,19 @@
         if ($device2->connect()) {
             //ACTIVAR EL DISABLE
             // $device2->disableDevice();
-
+            echo 'entre aqui';
             // $serie = $device2->serialNumber();
             $users = $device2->getAttendance(); // Update this line
-            if (!$connect) {
-                $resultados[] = ['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()];
-                die(json_encode(['error' => 'Error de conexión a la base de datos Postgres', 'details' => pg_last_error()], JSON_PRETTY_PRINT));
+            if (!$connect && !$conn) {
+                if (!$connect) {
+                    $resultados[] = ['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()];
+                    die(json_encode(['error' => 'Error de conexión a la base de datos SQLSERVER', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
+                } else {
+                    $resultados[] = ['error' => 'Error de conexión a la base de datos', 'details' => pg_last_error()];
+                    die(json_encode(['error' => 'Error de conexión a la base de datos Postgres', 'details' => pg_last_error()], JSON_PRETTY_PRINT));
+                }
             } else {
-                insertarData($users, $conn, $marcador->numreloj, $connectionString);
-                $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
-            }
-            if (!$conn) {
-                die(json_encode(['error' => 'Error de conexión a la base de datos SQLSERVER', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-            } else {
-                // insertarDataPG($users, $connect, $marcador->numreloj);
+                insertarData($users, $conn, $marcador->numreloj, $connectionString, $connect);
                 $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
             }
 
@@ -113,9 +113,8 @@
         return $separatedNumber[0];
     }
 
-    function insertarData($users, $conn, $id, $connectionString)
+    function insertarData($users, $conn, $id, $connectionString, $connect)
     {
-        echo 'QUERY SQLSERVER' . '<br>';
         $connSigo = pg_connect($connectionString);
 
         if (!$connSigo) {
@@ -137,54 +136,64 @@
         // Cerrar la conexión
         pg_close($connSigo);
 
+        // Crear un array para almacenar los valores a insertar
+        $valuesToInsert = [];
+        $valuesToInsertPG = [];
+
         foreach ($users as $user) {
             $mark_code = $user['id'];
             $mark_date = dateToNumber($user['timestamp']);
             $mark_minutes = hoursToMinutes($user['timestamp']);
 
-            //INSERCION PARA SQLSERVER
+            //INFORMACION FALTANTE DEL USUARIO
             foreach ($rowsSigo as $row) {
                 if ($row['percod'] == $mark_code) {
                     $mark_dni = $row['pernumdocide'];
                     $mark_numTarj = $row['pernumfotchk'];
                 }
             }
-            // echo 'Percod: ' . $mark_code . ' DNI: ' . $mark_dni . ' Tarjeta: ' . $mark_numTarj . '<br>';
-            $query = "INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj,numero_tarjeta,dni)
-          VALUES ('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
 
-            echo '' . $query . '<br>';
+            // Agregar los valores al array
+            $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+            $valuesToInsertPG[] = "($mark_code, $mark_date, $mark_minutes, $id)";
+        }
+        echo 'QUERY SQLSERVER' . '<br>';
+        // Verificar si hay datos para insertar
+        if (!empty($valuesToInsert)) {
+            // Construir la consulta de bulk insert
+            $bulkInsertQuery = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj, numero_tarjeta, dni) VALUES ' . implode(', ', $valuesToInsert);
 
-            $result = sqlsrv_query($conn, $query);
+            echo '' . $bulkInsertQuery . '<br>';
+
+            // Ejecutar la consulta de bulk insert
+            $result = sqlsrv_query($conn, $bulkInsertQuery);
 
             if (!$result) {
-                // sqlsrv_close($conn);
+                // Manejar errores
                 die(json_encode(['error' => 'Error al insertar marcaciones en la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
             }
         }
-    }
-    function insertarDataPG($users, $connect, $id)
-    {
         echo 'QUERY POSTGRES' . '<br>';
-        foreach ($users as $user) {
-            $mark_code = $user['id'];
-            $mark_date = dateToNumber($user['timestamp']);
-            $mark_minutes = hoursToMinutes($user['timestamp']);
+        if (!empty($valuesToInsertPG)) {
+            // Construir la consulta de bulk insert
+            $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG);
 
-            //INSERCION PARA POSTGRES
-            $query = "INSERT INTO marcaciones (cod_trabajador,fecha_marcacion , hora_marcacion, numero_reloj) VALUES ($mark_code, $mark_date, $mark_minutes, $id)";
-            echo '' . $query . '<br>';
-            $resultPg = pg_query($connect, $query);
-            $estadoPg = pg_connection_status($connect);
-            if ($estadoPg === PGSQL_CONNECTION_OK) {
-                echo 'Conexión OK';
-            } else {
-                echo 'Se perdió la conexión';
-            }
+            echo '' . $bulkInsertQueryPG . '<br>';
 
-            if (!$resultPg) {
-                die('Error al ejecutar la consulta: ' . pg_last_error($connect));
-            }
+            // Ejecutar la consulta de bulk insert en PostgreSQL
+            // $resultPg = pg_query($connect, $bulkInsertQueryPG);
+
+            // if (!$resultPg) {
+            //     die('Error al ejecutar la consulta: ' . pg_last_error($connect));
+            // }
+
+            // $estadoPg = pg_connection_status($connect);
+
+            // if ($estadoPg === PGSQL_CONNECTION_OK) {
+            //     echo 'Conexión OK';
+            // } else {
+            //     echo 'Se perdió la conexión';
+            // }
         }
     }
 

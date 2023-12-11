@@ -5,46 +5,43 @@
 
     // Define las instancias de ZKTeco para cada dispositivo
 
-    $zkDevices = [
-        'zk' => ['device' => new ZKTeco('9.10.8.103', 4370), 'id' => 1],
-        'zk1' => ['device' => new ZKTeco('9.10.8.102', 4370), 'id' => 2],
-        'zk2' => ['device' => new ZKTeco('9.10.8.104', 4370), 'id' => 3],
-        'zk3' => ['device' => new ZKTeco('9.10.8.105', 4370), 'id' => 4],
-        'zk4' => ['device' => new ZKTeco('9.10.8.106', 4370), 'id' => 5],
-        'zk5' => ['device' => new ZKTeco('9.10.8.101', 4370), 'id' => 6], //administrativos
-        'zk6' => ['device' => new ZKTeco('9.10.8.107', 4370), 'id' => 7],
-        'zk7' => ['device' => new ZKTeco('9.10.8.108', 4370), 'id' => 8],
-        'zk8' => ['device' => new ZKTeco('9.10.8.109', 4370), 'id' => 9],
-        'zk9' => ['device' => new ZKTeco('9.10.8.110', 4370), 'id' => 10],
-        'zk10' => ['device' => new ZKTeco('9.10.8.111', 4370), 'id' => 11],
-        // Agrega instancias para otros dispositivos
-    ];
-
-    // Otras configuraciones y conexiones
-    foreach ($zkDevices as $deviceInfo) {
-        $device = $deviceInfo['device'];
-        if ($device->connect()) {
-            // echo "".json_encode($usersAll);
-            $device->disconnect();
-        }
-    }
-
     foreach ($relojes as $reloj) {
-        $device2 = new ZKTeco($reloj->host, $reloj->port);
-        if ($device2->connect()) {
-            // echo "".$reloj->host;
-            $device2->disconnect();
+        $device = new ZKTeco($reloj->host, $reloj->port);
+        $idRelog = $reloj->id;
+        $area = $reloj->area;
+        $numReloj = $reloj->numreloj;
+
+        // Conecta el dispositivo y obtiene los datos necesarios
+        if ($device->connect()) {
+            $serie = $device->serialNumber();
+            $selectedUsers = $device->getAttendance();
+            $device->disconnect();
+
+            // Agrega el dispositivo al array usando $idRelog como clave
+            if ($idRelog > 1) {
+                $zkDevices['zk' . $idRelog - 1] = ['device' => $device, 'area' => $area, 'numReloj' => $numReloj];
+            } else {
+                $zkDevices['zk'] = ['device' => $device, 'area' => $area, 'numReloj' => $numReloj];
+            }
+        } else {
+            $selectedUsers = [];
         }
     }
 
-    
-    // Obtiene los datos del dispositivo seleccionado
+    // Obtiene los datos del dispositivo seleccionado, me muestra ZK o ZK1 etc...
     $selectedDeviceKey = request()->input('selected_device', 'zk'); // Por defecto, selecciona 'zk'
+
     $selectedDeviceInfo = $zkDevices[$selectedDeviceKey];
+    //OBTENIENDO DATOS DEL REJOS SELECCIONADO
+    $areaSelected = $selectedDeviceInfo['area'];
+    $numRelojSelected = $selectedDeviceInfo['numReloj'];
+
+    //CONECCION DEL RELOJ
     $selectedDevice = $selectedDeviceInfo['device'];
 
     if ($selectedDevice->connect()) {
         $serie = $selectedDevice->serialNumber();
+
         $selectedUsers = $selectedDevice->getAttendance();
         $selectedDevice->disconnect();
     } else {
@@ -65,25 +62,38 @@
 
         <!-- Combo box para seleccionar dispositivo -->
         <div class="mt-3">
-            <h2>Seleccionar Dispositivo:</h2>
+            <h3>Seleccionar Dispositivo:</h3>
             <form method="post" action="{{ route('seleccionar_dispositivo') }}" class="form-inline">
                 @csrf
                 <div class="form-group mr-2">
                     <select name="selected_device" class="form-control">
-                        @foreach ($zkDevices as $key => $device)
+                        @foreach ($zkDevices as $key => $deviceInfo)
                             <option value="{{ $key }}" @if ($selectedDeviceKey === $key) selected @endif>
-                                {{ $key }}</option>
+                                {{ $key . (isset($deviceInfo['area']) ? ' - ' . $deviceInfo['area'] : '') }}</option>
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Seleccionar</button>
+                {{-- <button type="submit" class="btn btn-primary">Seleccionar</button> --}}
             </form>
         </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Escucha el evento de cambio en el select
+                $('select[name="selected_device"]').on('change', function() {
+                    // Envía automáticamente el formulario cuando cambia la selección
+                    $(this).closest('form').submit();
+                });
+            });
+        </script>
 
         <!-- Mostrar información del dispositivo seleccionado -->
         <div class="mt-4">
             <h5>Información del Marcador</h5>
             <p>Dispositivo: {{ $serie }}</p>
+            <p>Ubicación: {{ $areaSelected }}</p>
+            <p>Número de Reloj: {{ $numRelojSelected }}</p>
             <!-- ... Otros detalles del dispositivo ... -->
         </div>
 
@@ -96,12 +106,12 @@
                     <thead class="thead-light">
                         <tr>
                             {{-- <th>No.</th> --}}
-                            <th>Key</th>
+                            <th align="center">Index</th>
                             {{-- <th>Uid</th> --}}
-                            <th>User</th>
-                            <th>Date</th>
-                            <th>hoursToMinutes</th>
-                            <th>DateNumber</th>
+                            <th align="center">Usuario Cod</th>
+                            <th align="center">Fecha y hora de marcado</th>
+                            <th align="center">Hora en Minutos</th>
+                            <th align="center">Fecha</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -109,16 +119,16 @@
                         @foreach ($selectedUsers as $key => $user)
                             @php $no++; @endphp
                             <tr>
-                                {{-- <td align="right">{{ $no }}</td> --}}
+                                <td align="center">{{ $no }}</td>
                                 {{-- <td align="right">{{ $key }}</td> --}}
-                                <td align="right">{{ json_encode($user) }}</td>
+                                {{-- <td align="right">{{ json_encode($user) }}</td> --}}
 
-                                {{-- <td>{{ $key }}</td>
-                                <td>{{ $user['uid'] }}</td> --}}
-                                <td>{{ $user['id'] }}</td>
-                                <td>{{ $user['timestamp'] }}</td>
-                                <td>{{ hoursToMinutes($user['timestamp']) }}</td>
-                                <td>{{ dateToNumber($user['timestamp']) }}</td>
+                                {{-- <td>{{ $key }}</td> --}}
+                                {{-- <td>{{ $user['uid'] }}</td> --}}
+                                <td align="center">{{ $user['id'] }}</td>
+                                <td align="center">{{ $user['timestamp'] }}</td>
+                                <td align="center"> {{ hoursToMinutes($user['timestamp']) }}</td>
+                                <td align="center">{{ dateToNumber($user['timestamp']) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
