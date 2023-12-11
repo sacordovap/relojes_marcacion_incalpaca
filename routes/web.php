@@ -33,9 +33,11 @@ Route::get('/testpg', [PGConnectController::class, 'testPostgreSQLConnection']);
 // routes/web.php
 Route::post('/seleccionar_dispositivo', [DashboardController::class, 'seleccionarDispositivo'])->name('seleccionar_dispositivo');
 // Route::get('/indexUpMark', [DashboardController::class, 'indexUpMark'])->name('indexUpMark');
-Route::get('/index-up-mark', function () {
-    return view('dashboard.indexUpMark');
-})->name('indexUpMark');
+// Route::get('/index-up-mark', function () {
+//     return view('dashboard.indexUpMark');
+// })->name('indexUpMark');
+
+Route::get('/index-up-mark', [DashboardController::class, 'updateInfo'])->name('indexUpMark');
 // Route::middleware('auth')->group(function () {
 //     Route::get('/dashboard', function () {
 //         return view('dashboard');

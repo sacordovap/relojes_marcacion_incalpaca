@@ -4,26 +4,6 @@
 @php
     use Rats\Zkteco\Lib\ZKTeco;
 
-    // Configuración de conexión con el dispositivo ZKTeco
-    // $zkConfig = [
-    //     'ip' => '9.10.8.103',
-    //     'port' => 4370,
-    // ];
-
-    // Crear una instancia de Rats\Zkteco\Zkteco
-    // $zk = new ZKTeco($zkConfig['ip'], $zkConfig['port']);
-    $zk1 = new ZKTeco('9.10.8.102', 4370); // 1
-    $zk = new ZKTeco('9.10.8.103', 4370); //3
-    $zk2 = new ZKTeco('9.10.8.104', 4370); //6
-    $zk3 = new ZKTeco('9.10.8.105', 4370); //7
-    $zk4 = new ZKTeco('9.10.8.106', 4370); //5
-    $zk5 = new ZKTeco('9.10.8.101', 4370); //11
-    $zk6 = new ZKTeco('9.10.8.107', 4370); //21
-    $zk7 = new ZKTeco('9.10.8.108', 4370); //22
-    $zk8 = new ZKTeco('9.10.8.109', 4370); //23
-    $zk9 = new ZKTeco('9.10.8.110', 4370); //24
-    $zk10 = new ZKTeco('9.10.8.111', 4370); //25
-
     $resultados = [];
 
     $serverName = 'TPXSVBD02\CONTSQLDB,61865';
@@ -38,245 +18,47 @@
 
     $connect = pg_connect("host=$host port=$port user=$username password=$password dbname=$database");
 
-    // Intentar conectar al dispositivo
-    // if ($zk->connect()) {
-    //       // $zk->disableDevice();
+    $hostSigo = env('DB_HOST_PG2');
+    $portSigo = env('DB_PORT_PG2');
+    $databaseSigo = env('DB_DATABASE_PG2');
+    $usernameSigo = env('DB_USERNAME_PG2');
+    $passwordSigo = env('DB_PASSWORD_PG2');
 
-    //     // $zk->enableDevice();
-    //     // $zk->clearAttendance();
-    //     // $zk->disconnect();
-    //     // Obtener información del dispositivo
-    //     $serie = $zk->serialNumber();
-    //     $users = $zk->getAttendance(); // Update this line
+    $connectionString = "host=$hostSigo port=$portSigo dbname=$databaseSigo user=$usernameSigo password=$passwordSigo";
 
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
+    // Conexión a PostgreSQL UserSigo
 
-    //     insertarData($users, $conn, 3);
+    foreach ($marcadores as $marcador) {
+        $device2 = new ZKTeco($marcador->host, $marcador->port);
+        echo 'conecte marcador' . $marcador->numreloj . '<br>';
+        if ($device2->connect()) {
+            //ACTIVAR EL DISABLE
+            // $device2->disableDevice();
 
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk->disconnect();
-    // } else {
-    //     // Mostrar mensaje de error si no se pudo conectar
-    //     $users = [];
-    // }
-    // if ($zk1->connect()) {
-    //       // $zk1->disableDevice();
+            // $serie = $device2->serialNumber();
+            $users = $device2->getAttendance(); // Update this line
+            if (!$connect) {
+                $resultados[] = ['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()];
+                die(json_encode(['error' => 'Error de conexión a la base de datos Postgres', 'details' => pg_last_error()], JSON_PRETTY_PRINT));
+            } else {
+                insertarData($users, $conn, $marcador->numreloj, $connectionString);
+                $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
+            }
+            if (!$conn) {
+                die(json_encode(['error' => 'Error de conexión a la base de datos SQLSERVER', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
+            } else {
+                // insertarDataPG($users, $connect, $marcador->numreloj);
+                $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
+            }
 
-    //     // $zk1->enableDevice();
-    //     // $zk1->clearAttendance();
-    //     // $zk1->disconnect();
-    //     // Obtener información del dispositivo
-    //     $serie1 = $zk1->serialNumber();
-    //     $users1 = $zk1->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users1, $conn, 1);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk1->disconnect();
-    // }
-    // if ($zk2->connect()) {
-    //       // $zk2->disableDevice();
-
-    //     // $zk2->enableDevice();
-    //     // $zk2->clearAttendance();
-    //     // $zk2->disconnect();
-    //     // Obtener información del dispositivo
-    //     $serie2 = $zk2->serialNumber();
-    //     $users2 = $zk2->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users2, $conn, 6);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk2->disconnect();
-    // }
-    // if ($zk3->connect()) {
-    //     // $zk->disableDevice();
-
-    //     // $zk3->enableDevice();
-    //     // $zk3->clearAttendance();
-    //     // $zk3->disconnect();
-
-    //     // Obtener información del dispositivo
-    //     $serie3 = $zk3->serialNumber();
-    //     $users3 = $zk3->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users7, $conn, 7);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-
-    //     // Desconectar del dispositivo
-    //     $zk3->disconnect();
-    // }
-    if ($zk4->connect()) {
-        // $zk4->disableDevice();
-
-        // $zk4->enableDevice();
-        // $zk4->clearAttendance();
-        // $zk4->disconnect();
-        // Obtener información del dispositivo
-        $serie4 = $zk4->serialNumber();
-        $users4 = $zk4->getAttendance(); // Update this line
-        if (!$connect) {
-            $resultados[] = ['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()];
-            die(json_encode(['error' => 'Error de conexión a la base de datos Postgres', 'details' => pg_last_error()], JSON_PRETTY_PRINT));
+            // Desconectar del dispositivoy RECONECTAR
+            // $device2->enableDevice();
+            // $device2->clearAttendance();
+            $device2->disconnect();
         } else {
-            insertarData($users4, $conn, 5);
-            $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
+            $resultados[] = ['error' => 'No se pudo conectar al dispositivo'];
         }
-        if (!$conn) {
-            die(json_encode(['error' => 'Error de conexión a la base de datos SQLSERVER', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-        } else {
-            // insertarDataPG($users4, $connect, 5);
-        }
-
-        // Desconectar del dispositivo
-        $zk4->disconnect();
-    } else {
-        $resultados[] = ['error' => 'No se pudo conectar al dispositivo'];
     }
-    // if ($zk5->connect()) {
-    //     // $zk5->disableDevice();
-
-    //     // $zk5->enableDevice();
-    //     // $zk5->clearAttendance();
-    //     // $zk5->disconnect();
-    //     // Obtener información del dispositivo
-    //     $serie5 = $zk5->serialNumber();
-    //     $users5 = $zk5->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users5, $conn, 11);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk5->disconnect();
-    // }
-    // if ($zk6->connect()) {
-    //     // $zk6->disableDevice();
-
-    //     // $zk6->enableDevice();
-    //     // $zk6->clearAttendance();
-    //     // $zk6->disconnect();
-
-    //     // Obtener información del dispositivo
-    //     $serie6 = $zk6->serialNumber();
-    //     $users6 = $zk6->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users6, $conn, 21);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk6->disconnect();
-    // }
-    // if ($zk7->connect()) {
-    //     // $zk7->disableDevice();
-
-    //     // $zk7->enableDevice();
-    //     // $zk7->clearAttendance();
-    //     // $zk7->disconnect();
-
-    //     // Obtener información del dispositivo
-    //     $serie7 = $zk7->serialNumber();
-    //     $users7 = $zk7->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users7, $conn, 22);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk7->disconnect();
-    // }
-    // if ($zk8->connect()) {
-
-    //     // $zk8->disableDevice();
-
-    //     // $zk8->enableDevice();
-    //     // $zk8->clearAttendance();
-    //     // $zk8->disconnect();
-
-    //     // Obtener información del dispositivo
-    //     $serie8 = $zk8->serialNumber();
-    //     $users8 = $zk8->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users8, $conn, 5);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk8->disconnect();
-    // }
-    // if ($zk9->connect()) {
-    //     // $zk9->disableDevice();
-
-    //     // $zk9->enableDevice();
-    //     // $zk9->clearAttendance();
-    //     // $zk9->disconnect();
-
-    //     // Obtener información del dispositivo
-    //     $serie9 = $zk9->serialNumber();
-    //     $users9 = $zk9->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users9, $conn, 24);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk9->disconnect();
-    // }
-    // if ($zk10->connect()) {
-    //     // $zk10->disableDevice();
-
-    //     // $zk10->enableDevice();
-    //     // $zk10->clearAttendance();
-    //     // $zk10->disconnect();
-
-    //     // Obtener información del dispositivo
-    //     $serie10 = $zk10->serialNumber();
-    //     $users10 = $zk10->getAttendance(); // Update this line
-
-    //     if (!$conn) {
-    //         die(json_encode(['error' => 'Error de conexión a la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-    //     }
-
-    //     insertarData($users10, $conn, 25);
-
-    //     echo json_encode(['message' => 'Inserción exitosa en la base de datos'], JSON_PRETTY_PRINT);
-    //     // Desconectar del dispositivo
-    //     $zk10->disconnect();
-    // }
 
     //CERRANDO CONEXION CON SQL SERVER
 
@@ -331,15 +113,47 @@
         return $separatedNumber[0];
     }
 
-    function insertarData($users, $conn, $id)
+    function insertarData($users, $conn, $id, $connectionString)
     {
+        echo 'QUERY SQLSERVER' . '<br>';
+        $connSigo = pg_connect($connectionString);
+
+        if (!$connSigo) {
+            die('Error de conexión: ' . pg_last_error());
+        }
+        $nombreVista = 'perbol';
+
+        // Consulta a la vista
+        $querySigo = "SELECT * FROM $nombreVista";
+        $resultSigo = pg_query($connSigo, $querySigo);
+
+        if (!$resultSigo) {
+            die('Error en la consulta: ' . pg_last_error());
+        }
+
+        // Obtener datos de la vista
+        $rowsSigo = pg_fetch_all($resultSigo);
+
+        // Cerrar la conexión
+        pg_close($connSigo);
+
         foreach ($users as $user) {
             $mark_code = $user['id'];
             $mark_date = dateToNumber($user['timestamp']);
             $mark_minutes = hoursToMinutes($user['timestamp']);
+
             //INSERCION PARA SQLSERVER
-            $query = "INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj,numero_tarjeta,dni) 
-              VALUES ($mark_code, $mark_date, $mark_minutes, $id,'0000000000','00000000')";
+            foreach ($rowsSigo as $row) {
+                if ($row['percod'] == $mark_code) {
+                    $mark_dni = $row['pernumdocide'];
+                    $mark_numTarj = $row['pernumfotchk'];
+                }
+            }
+            // echo 'Percod: ' . $mark_code . ' DNI: ' . $mark_dni . ' Tarjeta: ' . $mark_numTarj . '<br>';
+            $query = "INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj,numero_tarjeta,dni)
+          VALUES ('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+
+            echo '' . $query . '<br>';
 
             $result = sqlsrv_query($conn, $query);
 
@@ -351,13 +165,15 @@
     }
     function insertarDataPG($users, $connect, $id)
     {
+        echo 'QUERY POSTGRES' . '<br>';
         foreach ($users as $user) {
             $mark_code = $user['id'];
             $mark_date = dateToNumber($user['timestamp']);
             $mark_minutes = hoursToMinutes($user['timestamp']);
+
             //INSERCION PARA POSTGRES
             $query = "INSERT INTO marcaciones (cod_trabajador,fecha_marcacion , hora_marcacion, numero_reloj) VALUES ($mark_code, $mark_date, $mark_minutes, $id)";
-
+            echo '' . $query . '<br>';
             $resultPg = pg_query($connect, $query);
             $estadoPg = pg_connection_status($connect);
             if ($estadoPg === PGSQL_CONNECTION_OK) {
@@ -377,7 +193,7 @@
 @section('content')
     <div class="container mt-3">
         <!-- Verificar si hay un mensaje de éxito en la sesión -->
-        @if ($success))
+        @if ($success)
             <!-- Incluir SweetAlert desde la CDN -->
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 

@@ -24,10 +24,20 @@
     foreach ($zkDevices as $deviceInfo) {
         $device = $deviceInfo['device'];
         if ($device->connect()) {
+            // echo "".json_encode($usersAll);
             $device->disconnect();
         }
     }
 
+    foreach ($relojes as $reloj) {
+        $device2 = new ZKTeco($reloj->host, $reloj->port);
+        if ($device2->connect()) {
+            // echo "".$reloj->host;
+            $device2->disconnect();
+        }
+    }
+
+    
     // Obtiene los datos del dispositivo seleccionado
     $selectedDeviceKey = request()->input('selected_device', 'zk'); // Por defecto, selecciona 'zk'
     $selectedDeviceInfo = $zkDevices[$selectedDeviceKey];
@@ -85,9 +95,9 @@
                 <table class="table table-bordered table-hover">
                     <thead class="thead-light">
                         <tr>
-                            {{-- <th>No.</th>
+                            {{-- <th>No.</th> --}}
                             <th>Key</th>
-                            <th>Uid</th> --}}
+                            {{-- <th>Uid</th> --}}
                             <th>User</th>
                             <th>Date</th>
                             <th>hoursToMinutes</th>
@@ -99,8 +109,11 @@
                         @foreach ($selectedUsers as $key => $user)
                             @php $no++; @endphp
                             <tr>
-                                {{-- <td align="right">{{ $no }}</td>
-                                <td>{{ $key }}</td>
+                                {{-- <td align="right">{{ $no }}</td> --}}
+                                {{-- <td align="right">{{ $key }}</td> --}}
+                                <td align="right">{{ json_encode($user) }}</td>
+
+                                {{-- <td>{{ $key }}</td>
                                 <td>{{ $user['uid'] }}</td> --}}
                                 <td>{{ $user['id'] }}</td>
                                 <td>{{ $user['timestamp'] }}</td>
@@ -118,11 +131,13 @@
 @section('styles')
     <style>
         body {
-            background-color: #ecf0f1; /* Color de fondo general */
+            background-color: #ecf0f1;
+            /* Color de fondo general */
         }
 
         .header {
-            background-color: #3498db; /* Color de fondo de las secciones de encabezado */
+            background-color: #3498db;
+            /* Color de fondo de las secciones de encabezado */
             color: #ffffff;
         }
 
@@ -131,7 +146,8 @@
         }
 
         tr:hover {
-            background-color: #e0e0e0; /* Color de fondo al pasar el ratón sobre las filas de la tabla */
+            background-color: #e0e0e0;
+            /* Color de fondo al pasar el ratón sobre las filas de la tabla */
         }
     </style>
 @endsection
