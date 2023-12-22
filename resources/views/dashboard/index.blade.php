@@ -13,9 +13,8 @@
 
         // Conecta el dispositivo y obtiene los datos necesarios
         if ($device->connect()) {
-            $serie = $device->serialNumber();
-            $selectedUsers = $device->getAttendance();
-            $device->disconnect();
+            // $serie = $device->serialNumber();
+            // $selectedUsers = $device->getAttendance();
 
             // Agrega el dispositivo al array usando $idRelog como clave
             if ($idRelog > 1) {
@@ -23,6 +22,7 @@
             } else {
                 $zkDevices['zk'] = ['device' => $device, 'area' => $area, 'numReloj' => $numReloj];
             }
+            $device->disconnect();
         } else {
             $selectedUsers = [];
         }
@@ -36,7 +36,7 @@
     $areaSelected = $selectedDeviceInfo['area'];
     $numRelojSelected = $selectedDeviceInfo['numReloj'];
 
-    //CONECCION DEL RELOJ
+    //CONEXION DEL RELOJ
     $selectedDevice = $selectedDeviceInfo['device'];
 
     if ($selectedDevice->connect()) {
