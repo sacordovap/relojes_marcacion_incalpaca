@@ -9,7 +9,7 @@ use PDO;
 class SQLServerController extends Controller
 {
     public function checkConnection()
-    {
+    { 
 
        
         try {

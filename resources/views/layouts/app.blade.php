@@ -7,7 +7,7 @@
     <!-- Bootstrap CSS from CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body style="background-image: url('https://via.placeholder.com/1920x1080'); background-size: cover;">
+<body style="background-image: url('https://img.freepik.com/vector-premium/alambre-cadena-valla-malla-alambre-acero-metal_6735-1542.jpg'); background-size: auto; ">
     @yield('content')
 
     <!-- Bootstrap JS from CDN -->

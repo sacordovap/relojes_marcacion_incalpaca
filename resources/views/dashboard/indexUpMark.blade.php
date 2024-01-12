@@ -30,7 +30,7 @@
 
     foreach ($marcadores as $marcador) {
         $device2 = new ZKTeco($marcador->host, $marcador->port);
-        echo '<h4>' . 'Conexión exitosa con el marcador ' . $marcador->numreloj . '</h4>';
+        echo '<h4 style="color: white; background-color: #3367d1; padding: 3px;">' . 'Conexión exitosa con el marcador ' . $marcador->numreloj . '</h4>';
 
         if (!$connect && !$conn) {
             if (!$connect) {
@@ -161,7 +161,7 @@
 
         // Crear una transacción para SQL Server
         sqlsrv_begin_transaction($conn);
-        echo '<h5>' . 'QUERY SQLSERVER' . '</h5>';
+        echo '<h5 style="color: white; background-color: #3367d1; padding: 3px;">QUERY SQLSERVER</h5>';
         try {
             $chunks = array_chunk($valuesToInsert, 500);
 
@@ -169,7 +169,7 @@
                 // Construir la consulta de bulk insert
                 $bulkInsertQuery = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj, numero_tarjeta, dni) VALUES ' . implode(', ', $chunk);
 
-                echo '' . $bulkInsertQuery . '<br>' . '<br>';
+                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQuery . '</div>';
 
                 // Ejecutar la consulta de bulk insert
                 $result = sqlsrv_query($conn, $bulkInsertQuery);
@@ -193,13 +193,13 @@
             die(json_encode(['error' => 'Error al insertar marcaciones en la base de datos', 'details' => $e->getMessage()], JSON_PRETTY_PRINT));
         }
 
-        echo '<h5>' . 'QUERY POSTGRES' . '</h5>';
+        echo '<h5 style="color: white; background-color: #3367d1; padding: 3px;">' . 'QUERY POSTGRES' . '</h5>';
         if (!empty($valuesToInsertPG)) {
             // Construir la consulta de bulk insert con ON CONFLICT
             $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG) . ' ON CONFLICT (cod_trabajador, fecha_marcacion, hora_marcacion) DO NOTHING';
 
-            echo '' . $bulkInsertQueryPG . '<br>' . '<br>';
-
+            
+            echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQueryPG . '</div>';
             // Ejecutar la consulta de bulk insert en PostgreSQL
             $resultPg = pg_query($connect, $bulkInsertQueryPG);
 
@@ -210,9 +210,10 @@
             $estadoPg = pg_connection_status($connect);
 
             if ($estadoPg === PGSQL_CONNECTION_OK) {
-                echo 'Conexión OK';
+               
+                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Conexión OK' . '</div>';
             } else {
-                echo 'Se perdió la conexión';
+                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Se perdió la conexión' . '</div>';
             }
         }
     }
