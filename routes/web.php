@@ -28,8 +28,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/check-sql-connection', [SQLServerController::class, 'checkConnection']);
 Route::get('/testpg', [PGConnectController::class, 'testPostgreSQLConnection']);
-// Route::get('/show-marcaciones', [PGConnectController::class, 'showMarcaciones']);
-// Route::get('/sqlserver-marcaciones', [SQLServerController::class, 'showMarcaciones']);
+Route::get('/show-marcaciones', [PGConnectController::class, 'showMarcaciones']);
+Route::get('/sqlserver-marcaciones', [SQLServerController::class, 'showMarcaciones']);
 // routes/web.php
 Route::post('/seleccionar_dispositivo', [DashboardController::class, 'seleccionarDispositivo'])->name('seleccionar_dispositivo');
 // Route::get('/indexUpMark', [DashboardController::class, 'indexUpMark'])->name('indexUpMark');

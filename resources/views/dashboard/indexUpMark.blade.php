@@ -43,17 +43,21 @@
         } else {
             if ($device2->connect()) {
                 //ACTIVAR EL DISABLE
-                // $device2->disableDevice();
+                $device2->disableDevice();
 
                 // $serie = $device2->serialNumber();
                 $users = $device2->getAttendance(); // Update this line
                 insertarData($users, $conn, $marcador->numreloj, $connectionString, $connect, $device2);
-                $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
-
-                //ACTIVAR EL DISABLE
+                //DESCOMENTAR SI SE OPTIMIZA
                 // $device2->enableDevice();
                 // $device2->clearAttendance();
-                $device2->disconnect();
+                // $device2->disconnect();
+
+
+                $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
+                 
+              
+                
             } else {
                 $device2->disconnect();
                 $resultados[] = ['error' => 'No se pudo conectar al dispositivo'];
@@ -140,6 +144,26 @@
         // Crear un array para almacenar los valores a insertar
         $valuesToInsert = [];
         $valuesToInsertPG = [];
+        $uniqueRecords = [];
+
+        /***  VERSION ANTERIOR PARA USAR ONCONFLICT ***/
+        // foreach ($users as $user) {
+        //     $mark_code = $user['id'];
+        //     $mark_date = dateToNumber($user['timestamp']);
+        //     $mark_minutes = hoursToMinutes($user['timestamp']);
+
+        //     //INFORMACION FALTANTE DEL USUARIO
+        //     foreach ($rowsSigo as $row) {
+        //         if ($row['percod'] == $mark_code) {
+        //             $mark_dni = $row['pernumdocide'];
+        //             $mark_numTarj = $row['pernumfotchk'];
+        //         }
+        //     }
+
+        //     // Agregar los valores al array
+        //     $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+        //     $valuesToInsertPG[] = "('$mark_code', $mark_date, $mark_minutes, $id)";
+        // }
 
         foreach ($users as $user) {
             $mark_code = $user['id'];
@@ -153,10 +177,18 @@
                     $mark_numTarj = $row['pernumfotchk'];
                 }
             }
+            // Crear una cadena única que representa el registro
+            $uniqueKey = "$mark_code|$mark_date|$mark_minutes|$id";
 
-            // Agregar los valores al array
-            $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
-            $valuesToInsertPG[] = "('$mark_code', $mark_date, $mark_minutes, $id)";
+            // Verificar si el registro ya existe en el conjunto
+            if (!isset($uniqueRecords[$uniqueKey])) {
+                // Si no existe, agregar el nuevo registro al conjunto
+                $uniqueRecords[$uniqueKey] = true;
+
+                // Agregar el nuevo registro al arreglo
+                $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+                $valuesToInsertPG[] = "('$mark_code', $mark_date, $mark_minutes, $id)";
+            }
         }
 
         // Crear una transacción para SQL Server
@@ -196,24 +228,27 @@
         echo '<h5 style="color: white; background-color: #3367d1; padding: 3px;">' . 'QUERY POSTGRES' . '</h5>';
         if (!empty($valuesToInsertPG)) {
             // Construir la consulta de bulk insert con ON CONFLICT
-            $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG) . ' ON CONFLICT (cod_trabajador, fecha_marcacion, hora_marcacion) DO NOTHING';
+            // $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG) . ' ON CONFLICT (cod_trabajador, fecha_marcacion, hora_marcacion) DO NOTHING';
+            $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG);
 
-            
             echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQueryPG . '</div>';
             // Ejecutar la consulta de bulk insert en PostgreSQL
             $resultPg = pg_query($connect, $bulkInsertQueryPG);
 
             if (!$resultPg) {
                 die('Error al ejecutar la consulta: ' . pg_last_error($connect));
-            }
-
-            $estadoPg = pg_connection_status($connect);
-
+            }          
+            
+                $estadoPg = pg_connection_status($connect);
             if ($estadoPg === PGSQL_CONNECTION_OK) {
-               
                 echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Conexión OK' . '</div>';
+                //ACTIVAR EL DISABLE
+                $device2->enableDevice();
+                $device2->clearAttendance();
+                $device2->disconnect();
             } else {
                 echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Se perdió la conexión' . '</div>';
+                $device2->disconnect();
             }
         }
     }
