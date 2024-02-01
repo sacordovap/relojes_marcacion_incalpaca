@@ -47,17 +47,20 @@
 
                 // $serie = $device2->serialNumber();
                 $users = $device2->getAttendance(); // Update this line
-                insertarData($users, $conn, $marcador->numreloj, $connectionString, $connect, $device2);
-                //DESCOMENTAR SI SE OPTIMIZA
-                // $device2->enableDevice();
-                // $device2->clearAttendance();
-                // $device2->disconnect();
+                $estadoPg = pg_connection_status($connect);
+                $estadoSQL = sqlsrv_connect($serverName, $connectionInfo);
+                if ($estadoPg === PGSQL_CONNECTION_OK && $estadoSQL) {
+                    insertarData($users, $conn, $marcador->numreloj, $connectionString, $connect, $device2);
+                    //DESCOMENTAR SI SE OPTIMIZA
+                } else {
+                    echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Revise sus conexiones' . '</div>';
+                }
 
+                $device2->enableDevice();
+                $device2->clearAttendance();
+                $device2->disconnect();
 
                 $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
-                 
-              
-                
             } else {
                 $device2->disconnect();
                 $resultados[] = ['error' => 'No se pudo conectar al dispositivo'];
@@ -175,6 +178,7 @@
                 if ($row['percod'] == $mark_code) {
                     $mark_dni = $row['pernumdocide'];
                     $mark_numTarj = $row['pernumfotchk'];
+                    break; 
                 }
             }
             // Crear una cadena única que representa el registro
@@ -186,8 +190,59 @@
                 $uniqueRecords[$uniqueKey] = true;
 
                 // Agregar el nuevo registro al arreglo
-                $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+                // $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+                $valuesToInsert[] = "(IIF($mark_code = '02161', '02161', '$mark_code'), $mark_date, $mark_minutes, $id, '$mark_numTarj', '$mark_dni')";
                 $valuesToInsertPG[] = "('$mark_code', $mark_date, $mark_minutes, $id)";
+            }
+            // Verificar si el registro ya existe en el conjunto
+            /* if (!isset($uniqueRecords[$uniqueKey])) {
+                // Si no existe, agregar el nuevo registro al conjunto
+                $uniqueRecords[$uniqueKey] = true;
+
+                // Verificar si el registro ya existe antes de intentar insertarlo
+                $queryCheck = "SELECT 1 FROM marcaciones WHERE cod_trabajador = '$mark_code' AND fecha_marcacion = $mark_date AND hora_marcacion = $mark_minutes AND numero_reloj = $id";
+                $resultCheck = pg_query($connect, $queryCheck);
+
+                if ($resultCheck && pg_num_rows($resultCheck) > 0) {
+                    // Si ya existe, almacenar la información en una variable
+                    $duplicateRecord = pg_fetch_assoc($resultCheck);
+
+                    // Mostrar en pantalla la información del registro duplicado
+                    echo '<div style="color: red; background-color: #f0f0f0; padding: 3px;">Registro duplicado: ' . json_encode($duplicateRecord) . '</div>';
+                } else {
+                    // Si no existe, agregar el nuevo registro al conjunto
+                    $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
+                    $valuesToInsertPG[] = "('$mark_code', $mark_date, $mark_minutes, $id)";
+                }*/
+        }
+
+        echo '<h5 style="color: white; background-color: #3367d1; padding: 3px;">' . 'QUERY POSTGRES' . '</h5>';
+        if (!empty($valuesToInsertPG)) {
+            // Construir la consulta de bulk insert con ON CONFLICT
+            // $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG) . ' ON CONFLICT (cod_trabajador, fecha_marcacion, hora_marcacion) DO NOTHING';
+            $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG);
+
+            echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQueryPG . '</div>';
+            // Ejecutar la consulta de bulk insert en PostgreSQL
+            $resultPg = pg_query($connect, $bulkInsertQueryPG);
+
+            if (!$resultPg) {
+                die('Error al ejecutar la consulta: ' . pg_last_error($connect));
+
+                // Si hay un error, imprime el mensaje de error y la consulta
+                die('Error al ejecutar la consulta: ' . pg_last_error($connect) . ' Query: ' . $bulkInsertQueryPG);
+            }
+
+            $estadoPg = pg_connection_status($connect);
+            if ($estadoPg === PGSQL_CONNECTION_OK) {
+                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Conexión OK' . '</div>';
+                //ACTIVAR EL DISABLE
+                /*$device2->enableDevice();
+                $device2->clearAttendance();
+                $device2->disconnect();*/
+            } else {
+                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Se perdió la conexión' . '</div>';
+                $device2->disconnect();
             }
         }
 
@@ -223,33 +278,6 @@
             // $device2->enableDevice();
             $device2->disconnect();
             die(json_encode(['error' => 'Error al insertar marcaciones en la base de datos', 'details' => $e->getMessage()], JSON_PRETTY_PRINT));
-        }
-
-        echo '<h5 style="color: white; background-color: #3367d1; padding: 3px;">' . 'QUERY POSTGRES' . '</h5>';
-        if (!empty($valuesToInsertPG)) {
-            // Construir la consulta de bulk insert con ON CONFLICT
-            // $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG) . ' ON CONFLICT (cod_trabajador, fecha_marcacion, hora_marcacion) DO NOTHING';
-            $bulkInsertQueryPG = 'INSERT INTO marcaciones (cod_trabajador, fecha_marcacion, hora_marcacion, numero_reloj) VALUES ' . implode(', ', $valuesToInsertPG);
-
-            echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQueryPG . '</div>';
-            // Ejecutar la consulta de bulk insert en PostgreSQL
-            $resultPg = pg_query($connect, $bulkInsertQueryPG);
-
-            if (!$resultPg) {
-                die('Error al ejecutar la consulta: ' . pg_last_error($connect));
-            }          
-            
-                $estadoPg = pg_connection_status($connect);
-            if ($estadoPg === PGSQL_CONNECTION_OK) {
-                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Conexión OK' . '</div>';
-                //ACTIVAR EL DISABLE
-                $device2->enableDevice();
-                $device2->clearAttendance();
-                $device2->disconnect();
-            } else {
-                echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Se perdió la conexión' . '</div>';
-                $device2->disconnect();
-            }
         }
     }
 
