@@ -43,7 +43,7 @@
         } else {
             if ($device2->connect()) {
                 //ACTIVAR EL DISABLE
-                $device2->disableDevice();
+                // $device2->disableDevice();
 
                 // $serie = $device2->serialNumber();
                 $users = $device2->getAttendance(); // Update this line
@@ -56,8 +56,8 @@
                     echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . 'Revise sus conexiones' . '</div>';
                 }
 
-                $device2->enableDevice();
-                $device2->clearAttendance();
+                // $device2->enableDevice();
+                // $device2->clearAttendance();
                 $device2->disconnect();
 
                 $resultados[] = ['message' => 'Inserción exitosa en la base de datos'];
@@ -178,8 +178,11 @@
                 if ($row['percod'] == $mark_code) {
                     $mark_dni = $row['pernumdocide'];
                     $mark_numTarj = $row['pernumfotchk'];
-                    break; 
+                    break;
                 }
+            }
+            if (strlen($mark_code) === 4) {
+                $mark_code = '0' . $mark_code;
             }
             // Crear una cadena única que representa el registro
             $uniqueKey = "$mark_code|$mark_date|$mark_minutes|$id";
@@ -190,8 +193,7 @@
                 $uniqueRecords[$uniqueKey] = true;
 
                 // Agregar el nuevo registro al arreglo
-                // $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
-                $valuesToInsert[] = "(IIF($mark_code = '02161', '02161', '$mark_code'), $mark_date, $mark_minutes, $id, '$mark_numTarj', '$mark_dni')";
+                $valuesToInsert[] = "('$mark_code', $mark_date, $mark_minutes, $id,'$mark_numTarj','$mark_dni')";
                 $valuesToInsertPG[] = "('$mark_code', $mark_date, $mark_minutes, $id)";
             }
             // Verificar si el registro ya existe en el conjunto
@@ -224,14 +226,14 @@
 
             echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQueryPG . '</div>';
             // Ejecutar la consulta de bulk insert en PostgreSQL
-            $resultPg = pg_query($connect, $bulkInsertQueryPG);
+            // $resultPg = pg_query($connect, $bulkInsertQueryPG);
 
-            if (!$resultPg) {
-                die('Error al ejecutar la consulta: ' . pg_last_error($connect));
+            // if (!$resultPg) {
+            //     die('Error al ejecutar la consulta: ' . pg_last_error($connect));
 
-                // Si hay un error, imprime el mensaje de error y la consulta
-                die('Error al ejecutar la consulta: ' . pg_last_error($connect) . ' Query: ' . $bulkInsertQueryPG);
-            }
+            //     // Si hay un error, imprime el mensaje de error y la consulta
+            //     die('Error al ejecutar la consulta: ' . pg_last_error($connect) . ' Query: ' . $bulkInsertQueryPG);
+            // }
 
             $estadoPg = pg_connection_status($connect);
             if ($estadoPg === PGSQL_CONNECTION_OK) {
@@ -259,15 +261,15 @@
                 echo '<div style="color: white; background-color: #3367d1; padding: 3px;">' . $bulkInsertQuery . '</div>';
 
                 // Ejecutar la consulta de bulk insert
-                $result = sqlsrv_query($conn, $bulkInsertQuery);
+                // $result = sqlsrv_query($conn, $bulkInsertQuery);
 
-                if (!$result) {
-                    // Si hay un error, revertir la transacción y manejar el error
-                    sqlsrv_rollback($conn);
-                    // $device2->enableDevice();
-                    $device2->disconnect();
-                    die(json_encode(['error' => 'Error al insertar marcaciones en la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
-                }
+                // if (!$result) {
+                //     // Si hay un error, revertir la transacción y manejar el error
+                //     sqlsrv_rollback($conn);
+                //     // $device2->enableDevice();
+                //     $device2->disconnect();
+                //     die(json_encode(['error' => 'Error al insertar marcaciones en la base de datos', 'details' => sqlsrv_errors()], JSON_PRETTY_PRINT));
+                // }
             }
 
             // Confirmar la transacción si todo está bien
